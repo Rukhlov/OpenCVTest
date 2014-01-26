@@ -41,12 +41,15 @@
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.LoggerTextBox = new System.Windows.Forms.RichTextBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.SmoothBlurSpinBox = new System.Windows.Forms.NumericUpDown();
             ((System.ComponentModel.ISupportInitialize)(this.OriginalImageBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.CannyImageBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.SmoothImageBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.ThresholdImageBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.ThresholdSpinBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.MaxThresholdSpinBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.SmoothBlurSpinBox)).BeginInit();
             this.SuspendLayout();
             // 
             // OriginalImageBox
@@ -143,17 +146,42 @@
             // 
             // LoggerTextBox
             // 
-            this.LoggerTextBox.Location = new System.Drawing.Point(580, 92);
+            this.LoggerTextBox.Location = new System.Drawing.Point(580, 143);
             this.LoggerTextBox.Name = "LoggerTextBox";
-            this.LoggerTextBox.Size = new System.Drawing.Size(327, 451);
+            this.LoggerTextBox.Size = new System.Drawing.Size(327, 400);
             this.LoggerTextBox.TabIndex = 16;
             this.LoggerTextBox.Text = "";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(763, 78);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(61, 13);
+            this.label3.TabIndex = 18;
+            this.label3.Text = "SmoothBlur";
+            // 
+            // SmoothBlurSpinBox
+            // 
+            this.SmoothBlurSpinBox.Location = new System.Drawing.Point(830, 76);
+            this.SmoothBlurSpinBox.Maximum = new decimal(new int[] {
+            255,
+            0,
+            0,
+            0});
+            this.SmoothBlurSpinBox.Name = "SmoothBlurSpinBox";
+            this.SmoothBlurSpinBox.Size = new System.Drawing.Size(53, 20);
+            this.SmoothBlurSpinBox.TabIndex = 17;
+            this.SmoothBlurSpinBox.ThousandsSeparator = true;
+            this.SmoothBlurSpinBox.ValueChanged += new System.EventHandler(this.SmoothBlurSpinBox_ValueChanged);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(919, 555);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.SmoothBlurSpinBox);
             this.Controls.Add(this.LoggerTextBox);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
@@ -172,6 +200,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.ThresholdImageBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.ThresholdSpinBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.MaxThresholdSpinBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.SmoothBlurSpinBox)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -189,6 +218,8 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.RichTextBox LoggerTextBox;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.NumericUpDown SmoothBlurSpinBox;
     }
 }
 
