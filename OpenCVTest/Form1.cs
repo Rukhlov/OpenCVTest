@@ -14,57 +14,64 @@ using Emgu.Util;
 
 namespace OpenCVTest
 {
-    public partial class Form1 : Form, ICvProcessorForm
+    public partial class Form1 : Form//, ICvProcessorForm
     {
         private CvProcessor cvProcessor = null;
         public Form1()
         {
             InitializeComponent();
-            cvProcessor = new CvProcessor(this);
-            cvProcessor.Init();
+            cvProcessor = new CvProcessor();
+
+            cvProcessor.CaptureStateChanged += new CvProcessor.CaptureStateChangedEventHandler(cvProcessor_CaptureStateChanged);
+            cvProcessor.Verbose += new CvProcessor.CaptureVerboseEventHandler(cvProcessor_CaptureVerbose);
+            cvProcessor.ImageProcessed += new CvProcessor.ImageProcessedHandler(cvProcessor_ImageProcessed);
+
+            this.ThresholdSpinBox.DataBindings.DefaultDataSourceUpdateMode = DataSourceUpdateMode.OnPropertyChanged;
+            this.ThresholdSpinBox.DataBindings.Add("Value", cvProcessor, "ThresholdVal");
+
+            this.MaxThresholdSpinBox.DataBindings.DefaultDataSourceUpdateMode = DataSourceUpdateMode.OnPropertyChanged;
+            this.MaxThresholdSpinBox.DataBindings.Add("Value", cvProcessor, "MaxThresholdVal");
+
+            this.SmoothBlurSpinBox.DataBindings.DefaultDataSourceUpdateMode = DataSourceUpdateMode.OnPropertyChanged;
+            this.SmoothBlurSpinBox.DataBindings.Add("Value", cvProcessor, "SmoothBlur");
+
         }
 
-        public void SetCaptureText(string value)
+        private void cvProcessor_CaptureStateChanged(bool CaptureState)
         {
-            this.StratButton.Text = value;
-        }
-        public void SetThreshold(int value) 
-        { 
-            this.ThresholdSpinBox.Value = (int)cvProcessor.ThresholdVal;
-        }
-        public void SetMaxThreshold(int value) 
-        {
-            this.MaxThresholdSpinBox.Value = (int)cvProcessor.MaxThresholdVal;
-        }
-
-        public void SetSmoothBlur(int value)
-        {
-            this.SmoothBlurSpinBox.Value = (int)cvProcessor.SmoothBlur;
+            if (CaptureState == true)
+            {
+                this.StratButton.Text = "Start Capture";
+            }
+            else
+            {
+                this.StratButton.Text = "Stop";
+            }
         }
 
-        public void Echo(string message, bool title = false)
+        public void cvProcessor_CaptureVerbose(string message, bool IsTitleMessage = false)
         {
-            string result=string.Format("{0:HH:mm:ss.fff}>>{1}{2}",DateTime.Now, message, Environment.NewLine); 
+            string result = string.Format("{0:HH:mm:ss.fff}>>{1}{2}", DateTime.Now, message, Environment.NewLine);
             if (this.InvokeRequired == true)
             {
-                this.Invoke((Action)(() => 
+                this.Invoke((Action)(() =>
                 {
-                    if (title == false)
+                    if (IsTitleMessage == false)
                         this.LoggerTextBox.AppendText(result);
                     else
-                        this.Text = message; 
+                        this.Text = message;
                 }));
             }
             else
             {
-                if (title == false)
+                if (IsTitleMessage == false)
                     this.LoggerTextBox.AppendText(result);
                 else
-                    this.Text = message; 
+                    this.Text = message;
             }
         }
 
-        public void Draw(Image<Bgr, Byte> frame, Image<Gray, Byte> smooth, Image<Gray, Byte> threshold, Image<Gray, Byte> canny)
+        public void cvProcessor_ImageProcessed(Image<Bgr, Byte> frame, Image<Gray, Byte> smooth, Image<Gray, Byte> threshold, Image<Gray, Byte> canny)
         {
             this.OriginalImageBox.Image = frame;
             this.SmoothImageBox.Image = smooth;
@@ -79,40 +86,48 @@ namespace OpenCVTest
             cvProcessor.Start();
         }
 
-        private void MaxThresholdSpinBox_ValueChanged(object sender, EventArgs e)
-        {
-            cvProcessor.MaxThresholdVal= (double)MaxThresholdSpinBox.Value;
-        }
-
-        private void ThresholdSpinBox_ValueChanged(object sender, EventArgs e)
-        {
-            cvProcessor.ThresholdVal= (double)ThresholdSpinBox.Value;
-        }
-
-        private void SmoothBlurSpinBox_ValueChanged(object sender, EventArgs e)
-        {
-            cvProcessor.SmoothBlur = (int)SmoothBlurSpinBox.Value;
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            //if (_capture != null)
-            //{
-            //    //double property = _capture.GetCaptureProperty(Emgu.CV.CvEnum.CAP_PROP.CV_CAP_PROP_AUTO_EXPOSURE);
-
-            //    _capture.SetCaptureProperty(Emgu.CV.CvEnum.CAP_PROP.CV_CAP_PROP_BRIGHTNESS, 1.0);
-
-            //    //this.Text = String.Format("CV_CAP_PROP_BRIGHTNESS={0}", property);
-            //}
-        }
-
-
-
     }
 
-    class CvProcessor
+    class CvProcessor : INotifyPropertyChanged
     {
+        public delegate void CaptureStateChangedEventHandler(bool CaptureState);
+        public event CaptureStateChangedEventHandler CaptureStateChanged;
+
+        public delegate void CaptureVerboseEventHandler(string message, bool title);
+        public event CaptureVerboseEventHandler Verbose;
+
+        public delegate void ImageProcessedHandler(Image<Bgr, Byte> frame, Image<Gray, Byte> smooth, Image<Gray, Byte> threshold, Image<Gray, Byte> canny);
+        public event ImageProcessedHandler ImageProcessed;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void NotifyPropertyChanged(String propertyName = "")
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+
+        public void OnCaptureStateChanged(bool state)
+        {
+            if (CaptureStateChanged != null)
+                CaptureStateChanged(state);
+        }
+
+        public void OnVerbose(string message, bool title = false)
+        {
+            if (Verbose != null)
+                Verbose(message, title);
+        }
+
+        public void OnImageProcessed(Image<Bgr, Byte> frame, Image<Gray, Byte> smooth, Image<Gray, Byte> threshold, Image<Gray, Byte> canny)
+        {
+            if (ImageProcessed != null)
+                ImageProcessed(frame, smooth, threshold, canny);
+        }
+
         private Capture capture;
+
         private bool inProgress;
 
         private double maxThresholdVal = 255;
@@ -123,22 +138,21 @@ namespace OpenCVTest
         public int SmoothBlur
         {
             get { return smoothBlur; }
-            set 
+            set
             {
                 if (value > 0 && value < 50)
                 {
                     smoothBlur = value;
                 }
 
-                if (form != null)
-                    form.SetSmoothBlur(smoothBlur);
+                NotifyPropertyChanged("SmoothBlur");
             }
         }
 
         public double MaxThresholdVal
         {
             get { return maxThresholdVal; }
-            set 
+            set
             {
                 if (value > ThresholdVal)
                 {
@@ -147,10 +161,9 @@ namespace OpenCVTest
                 else
                 {
                     maxThresholdVal = ThresholdVal;
-
-                    if(form!=null)
-                        form.SetMaxThreshold((int)MaxThresholdVal);
                 }
+
+                NotifyPropertyChanged("MaxThresholdVal");
             }
         }
 
@@ -158,7 +171,7 @@ namespace OpenCVTest
         public double ThresholdVal
         {
             get { return thresholdVal; }
-            set 
+            set
             {
                 if (value < MaxThresholdVal)
                 {
@@ -167,26 +180,10 @@ namespace OpenCVTest
                 else
                 {
                     thresholdVal = MaxThresholdVal;
-                    if(form!=null)
-                        form.SetThreshold((int)ThresholdVal);
                 }
+
+                NotifyPropertyChanged("ThresholdVal");
             }
-        }
-
-        private ICvProcessorForm form = null;
-
-        public CvProcessor(ICvProcessorForm _form)
-        {
-            form = _form;
-
-        }
-
-        public void Init()
-        {
-            form.SetCaptureText("Start Capture");
-            form.SetMaxThreshold((int)MaxThresholdVal);
-            form.SetThreshold((int)ThresholdVal);
-            form.SetSmoothBlur(SmoothBlur);
         }
 
         public void Start()
@@ -208,20 +205,20 @@ namespace OpenCVTest
             {
                 if (inProgress == true)
                 {
-                    form.SetCaptureText("Start Capture");
                     Application.Idle -= ProcessFrame;
                 }
                 else
                 {
-                    form.SetCaptureText("Stop");
+
                     Application.Idle += ProcessFrame;
                 }
 
+                OnCaptureStateChanged(inProgress);
                 inProgress = !inProgress;
             }
         }
 
-        private bool prevLEDStatus= false;
+        private bool prevLEDStatus = false;
         private bool currLEDStatus = false;
 
         private void ProcessFrame(object sender, EventArgs arg)
@@ -272,20 +269,21 @@ namespace OpenCVTest
                     currLEDStatus = true;
 
                     string message = string.Format("{0}, Area={1}", "LargestContour", largestContour.Area);
-                    form.Echo(message);
+
+                    OnVerbose(message);
 
                 }
             }
 
             if (currLEDStatus != prevLEDStatus)
             {
-                string message = String.Format("LED Status = {0}", currLEDStatus ? "ON" : "OFF"); ;
-                form.Echo(message, true);
+                string message = String.Format("LED Status = {0}", currLEDStatus ? "ON" : "OFF");
+                OnVerbose(message, true);
             }
 
             prevLEDStatus = currLEDStatus;
 
-            form.Draw(frame, smooth, threshold, canny);
+            ImageProcessed(frame, smooth, threshold, canny);
 
             //form.DrawFrame(frame);
 
@@ -299,18 +297,4 @@ namespace OpenCVTest
 
 
     }
-
-    interface ICvProcessorForm
-    {
-        void SetCaptureText(string value);
-        void SetThreshold(int value);
-        void SetMaxThreshold(int value);
-        void SetSmoothBlur(int value);
-
-        void Echo(string message, bool title=false);
-        //void DrawFrame(Image<Bgr, Byte> frame);
-        void Draw(Image<Bgr, Byte> frame, Image<Gray, Byte> smooth, Image<Gray, Byte> threshold, Image<Gray, Byte> canny);
-
-    }
-
 }

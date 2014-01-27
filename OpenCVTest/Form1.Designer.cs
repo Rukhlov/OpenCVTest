@@ -110,7 +110,7 @@
             this.ThresholdSpinBox.Size = new System.Drawing.Size(53, 20);
             this.ThresholdSpinBox.TabIndex = 9;
             this.ThresholdSpinBox.ThousandsSeparator = true;
-            this.ThresholdSpinBox.ValueChanged += new System.EventHandler(this.ThresholdSpinBox_ValueChanged);
+            //this.ThresholdSpinBox.ValueChanged += new System.EventHandler(this.ThresholdSpinBox_ValueChanged);
             // 
             // MaxThresholdSpinBox
             // 
@@ -124,7 +124,7 @@
             this.MaxThresholdSpinBox.Size = new System.Drawing.Size(53, 20);
             this.MaxThresholdSpinBox.TabIndex = 13;
             this.MaxThresholdSpinBox.ThousandsSeparator = true;
-            this.MaxThresholdSpinBox.ValueChanged += new System.EventHandler(this.MaxThresholdSpinBox_ValueChanged);
+            //this.MaxThresholdSpinBox.ValueChanged += new System.EventHandler(this.MaxThresholdSpinBox_ValueChanged);
             // 
             // label1
             // 
@@ -173,7 +173,7 @@
             this.SmoothBlurSpinBox.Size = new System.Drawing.Size(53, 20);
             this.SmoothBlurSpinBox.TabIndex = 17;
             this.SmoothBlurSpinBox.ThousandsSeparator = true;
-            this.SmoothBlurSpinBox.ValueChanged += new System.EventHandler(this.SmoothBlurSpinBox_ValueChanged);
+            //this.SmoothBlurSpinBox.ValueChanged += new System.EventHandler(this.SmoothBlurSpinBox_ValueChanged);
             // 
             // Form1
             // 
