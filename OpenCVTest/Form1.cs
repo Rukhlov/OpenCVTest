@@ -26,14 +26,11 @@ namespace OpenCVTest
             cvProcessor.Verbose += new CvProcessor.CaptureVerboseEventHandler(cvProcessor_CaptureVerbose);
             cvProcessor.ImageProcessed += new CvProcessor.ImageProcessedHandler(cvProcessor_ImageProcessed);
 
-            this.ThresholdSpinBox.DataBindings.DefaultDataSourceUpdateMode = DataSourceUpdateMode.OnPropertyChanged;
-            this.ThresholdSpinBox.DataBindings.Add("Value", cvProcessor, "ThresholdVal");
+            this.ThresholdSpinBox.DataBindings.Add("Value", cvProcessor.Parameters, "ThresholdVal", false, DataSourceUpdateMode.OnPropertyChanged);
 
-            this.MaxThresholdSpinBox.DataBindings.DefaultDataSourceUpdateMode = DataSourceUpdateMode.OnPropertyChanged;
-            this.MaxThresholdSpinBox.DataBindings.Add("Value", cvProcessor, "MaxThresholdVal");
+            this.MaxThresholdSpinBox.DataBindings.Add("Value", cvProcessor.Parameters, "MaxThresholdVal", false, DataSourceUpdateMode.OnPropertyChanged);
 
-            this.SmoothBlurSpinBox.DataBindings.DefaultDataSourceUpdateMode = DataSourceUpdateMode.OnPropertyChanged;
-            this.SmoothBlurSpinBox.DataBindings.Add("Value", cvProcessor, "SmoothBlur");
+            this.SmoothBlurSpinBox.DataBindings.Add("Value", cvProcessor.Parameters, "SmoothBlur", false, DataSourceUpdateMode.OnPropertyChanged);
 
         }
 
@@ -88,48 +85,8 @@ namespace OpenCVTest
 
     }
 
-    class CvProcessor : INotifyPropertyChanged
+    class CvParameters : INotifyPropertyChanged
     {
-        public delegate void CaptureStateChangedEventHandler(bool CaptureState);
-        public event CaptureStateChangedEventHandler CaptureStateChanged;
-
-        public delegate void CaptureVerboseEventHandler(string message, bool title);
-        public event CaptureVerboseEventHandler Verbose;
-
-        public delegate void ImageProcessedHandler(Image<Bgr, Byte> frame, Image<Gray, Byte> smooth, Image<Gray, Byte> threshold, Image<Gray, Byte> canny);
-        public event ImageProcessedHandler ImageProcessed;
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        private void NotifyPropertyChanged(String propertyName = "")
-        {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
-
-        public void OnCaptureStateChanged(bool state)
-        {
-            if (CaptureStateChanged != null)
-                CaptureStateChanged(state);
-        }
-
-        public void OnVerbose(string message, bool title = false)
-        {
-            if (Verbose != null)
-                Verbose(message, title);
-        }
-
-        public void OnImageProcessed(Image<Bgr, Byte> frame, Image<Gray, Byte> smooth, Image<Gray, Byte> threshold, Image<Gray, Byte> canny)
-        {
-            if (ImageProcessed != null)
-                ImageProcessed(frame, smooth, threshold, canny);
-        }
-
-        private Capture capture;
-
-        private bool inProgress;
-
         private double maxThresholdVal = 255;
         private double thresholdVal = 254;
 
@@ -186,6 +143,57 @@ namespace OpenCVTest
             }
         }
 
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void NotifyPropertyChanged(String propertyName = "")
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+    }
+    class CvProcessor
+    {
+
+        private Capture capture;
+        private bool inProgress;
+
+        private CvParameters parameters = new CvParameters();
+
+        internal CvParameters Parameters
+        {
+            get { return parameters; }
+            set { parameters = value; }
+        }
+
+        public delegate void CaptureStateChangedEventHandler(bool CaptureState);
+        public event CaptureStateChangedEventHandler CaptureStateChanged;
+
+        public delegate void CaptureVerboseEventHandler(string message, bool title);
+        public event CaptureVerboseEventHandler Verbose;
+
+        public delegate void ImageProcessedHandler(Image<Bgr, Byte> frame, Image<Gray, Byte> smooth, Image<Gray, Byte> threshold, Image<Gray, Byte> canny);
+        public event ImageProcessedHandler ImageProcessed;
+
+        public void OnCaptureStateChanged(bool state)
+        {
+            if (CaptureStateChanged != null)
+                CaptureStateChanged(state);
+        }
+
+        public void OnVerbose(string message, bool title = false)
+        {
+            if (Verbose != null)
+                Verbose(message, title);
+        }
+
+        public void OnImageProcessed(Image<Bgr, Byte> frame, Image<Gray, Byte> smooth, Image<Gray, Byte> threshold, Image<Gray, Byte> canny)
+        {
+            if (ImageProcessed != null)
+                ImageProcessed(frame, smooth, threshold, canny);
+        }
+
+
         public void Start()
         {
             if (capture == null)
@@ -231,14 +239,14 @@ namespace OpenCVTest
             //Image<Gray, Byte> smoothedGrayFrame = smallGrayFrame.PyrUp();
             //Image<Gray, Byte> cannyFrame = smoothedGrayFrame.Canny(new Gray(100), new Gray(60));
 
-            Image<Gray, Byte> smooth = frame.SmoothBlur(SmoothBlur, SmoothBlur).Convert<Gray, Byte>();
+            Image<Gray, Byte> smooth = frame.SmoothBlur(parameters.SmoothBlur, parameters.SmoothBlur).Convert<Gray, Byte>();
 
             //Image<Gray, Byte> smoothImage = frame.Convert<Gray, Byte>();
 
             //smoothImage._EqualizeHist();
             //smoothImage._GammaCorrect(10.0d);
 
-            Image<Gray, Byte> threshold = smooth.ThresholdBinary(new Gray((int)thresholdVal), new Gray((int)maxThresholdVal));
+            Image<Gray, Byte> threshold = smooth.ThresholdBinary(new Gray((int)parameters.ThresholdVal), new Gray((int)parameters.MaxThresholdVal));
 
             Image<Gray, Byte> canny = threshold.Canny(new Gray(255), new Gray(255));
 
