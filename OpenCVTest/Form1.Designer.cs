@@ -30,7 +30,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             this.OriginalImageBox = new Emgu.CV.UI.ImageBox();
             this.StratButton = new System.Windows.Forms.Button();
             this.CannyImageBox = new Emgu.CV.UI.ImageBox();
@@ -43,6 +42,7 @@
             this.LoggerTextBox = new System.Windows.Forms.RichTextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.SmoothBlurSpinBox = new System.Windows.Forms.NumericUpDown();
+            this.LEDStatusLabel = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.OriginalImageBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.CannyImageBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.SmoothImageBox)).BeginInit();
@@ -110,7 +110,6 @@
             this.ThresholdSpinBox.Size = new System.Drawing.Size(53, 20);
             this.ThresholdSpinBox.TabIndex = 9;
             this.ThresholdSpinBox.ThousandsSeparator = true;
-            //this.ThresholdSpinBox.ValueChanged += new System.EventHandler(this.ThresholdSpinBox_ValueChanged);
             // 
             // MaxThresholdSpinBox
             // 
@@ -124,7 +123,6 @@
             this.MaxThresholdSpinBox.Size = new System.Drawing.Size(53, 20);
             this.MaxThresholdSpinBox.TabIndex = 13;
             this.MaxThresholdSpinBox.ThousandsSeparator = true;
-            //this.MaxThresholdSpinBox.ValueChanged += new System.EventHandler(this.MaxThresholdSpinBox_ValueChanged);
             // 
             // label1
             // 
@@ -146,9 +144,9 @@
             // 
             // LoggerTextBox
             // 
-            this.LoggerTextBox.Location = new System.Drawing.Point(580, 143);
+            this.LoggerTextBox.Location = new System.Drawing.Point(580, 190);
             this.LoggerTextBox.Name = "LoggerTextBox";
-            this.LoggerTextBox.Size = new System.Drawing.Size(327, 400);
+            this.LoggerTextBox.Size = new System.Drawing.Size(327, 353);
             this.LoggerTextBox.TabIndex = 16;
             this.LoggerTextBox.Text = "";
             // 
@@ -173,13 +171,23 @@
             this.SmoothBlurSpinBox.Size = new System.Drawing.Size(53, 20);
             this.SmoothBlurSpinBox.TabIndex = 17;
             this.SmoothBlurSpinBox.ThousandsSeparator = true;
-            //this.SmoothBlurSpinBox.ValueChanged += new System.EventHandler(this.SmoothBlurSpinBox_ValueChanged);
+            // 
+            // LEDStatusLabel
+            // 
+            this.LEDStatusLabel.AutoSize = true;
+            this.LEDStatusLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 20.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.LEDStatusLabel.Location = new System.Drawing.Point(682, 144);
+            this.LEDStatusLabel.Name = "LEDStatusLabel";
+            this.LEDStatusLabel.Size = new System.Drawing.Size(129, 31);
+            this.LEDStatusLabel.TabIndex = 19;
+            this.LEDStatusLabel.Text = "LED OFF";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(919, 555);
+            this.Controls.Add(this.LEDStatusLabel);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.SmoothBlurSpinBox);
             this.Controls.Add(this.LoggerTextBox);
@@ -220,6 +228,7 @@
         private System.Windows.Forms.RichTextBox LoggerTextBox;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.NumericUpDown SmoothBlurSpinBox;
+        private System.Windows.Forms.Label LEDStatusLabel;
     }
 }
 

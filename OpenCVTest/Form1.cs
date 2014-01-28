@@ -11,6 +11,7 @@ using Emgu.CV;
 using Emgu.CV.Structure;
 using Emgu.CV.VideoSurveillance;
 using Emgu.Util;
+using System.Threading;
 
 namespace OpenCVTest
 {
@@ -25,50 +26,34 @@ namespace OpenCVTest
             cvProcessor.CaptureStateChanged += new CvProcessor.CaptureStateChangedEventHandler(cvProcessor_CaptureStateChanged);
             cvProcessor.Verbose += new CvProcessor.CaptureVerboseEventHandler(cvProcessor_CaptureVerbose);
             cvProcessor.ImageProcessed += new CvProcessor.ImageProcessedHandler(cvProcessor_ImageProcessed);
+            cvProcessor.LEDStatusChanged+=new CvProcessor.LEDStatusChangedEventHandler(cvProcessor_LEDStatusChanged);
+
 
             this.ThresholdSpinBox.DataBindings.Add("Value", cvProcessor.Parameters, "ThresholdVal", false, DataSourceUpdateMode.OnPropertyChanged);
-
             this.MaxThresholdSpinBox.DataBindings.Add("Value", cvProcessor.Parameters, "MaxThresholdVal", false, DataSourceUpdateMode.OnPropertyChanged);
-
             this.SmoothBlurSpinBox.DataBindings.Add("Value", cvProcessor.Parameters, "SmoothBlur", false, DataSourceUpdateMode.OnPropertyChanged);
 
         }
 
         private void cvProcessor_CaptureStateChanged(bool CaptureState)
         {
-            if (CaptureState == true)
-            {
-                this.StratButton.Text = "Start Capture";
-            }
-            else
-            {
-                this.StratButton.Text = "Stop";
-            }
+            this.StratButton.Text = (CaptureState == true) ? "Start Capture" : "Stop";
         }
 
-        public void cvProcessor_CaptureVerbose(string message, bool IsTitleMessage = false)
+        private void cvProcessor_LEDStatusChanged(bool CurrentLEDStatus)
+        {            
+            LEDStatusLabel.Text = CurrentLEDStatus==true?"LED ON":"LED OFF";
+        }
+
+        private void cvProcessor_CaptureVerbose(string message)
         {
             string result = string.Format("{0:HH:mm:ss.fff}>>{1}{2}", DateTime.Now, message, Environment.NewLine);
-            if (this.InvokeRequired == true)
-            {
-                this.Invoke((Action)(() =>
-                {
-                    if (IsTitleMessage == false)
-                        this.LoggerTextBox.AppendText(result);
-                    else
-                        this.Text = message;
-                }));
-            }
-            else
-            {
-                if (IsTitleMessage == false)
-                    this.LoggerTextBox.AppendText(result);
-                else
-                    this.Text = message;
-            }
+
+            this.LoggerTextBox.AppendText(result);
+
         }
 
-        public void cvProcessor_ImageProcessed(Image<Bgr, Byte> frame, Image<Gray, Byte> smooth, Image<Gray, Byte> threshold, Image<Gray, Byte> canny)
+        private void cvProcessor_ImageProcessed(Image<Bgr, Byte> frame, Image<Gray, Byte> smooth, Image<Gray, Byte> threshold, Image<Gray, Byte> canny)
         {
             this.OriginalImageBox.Image = frame;
             this.SmoothImageBox.Image = smooth;
@@ -143,6 +128,8 @@ namespace OpenCVTest
             }
         }
 
+
+
         public event PropertyChangedEventHandler PropertyChanged;
         private void NotifyPropertyChanged(String propertyName = "")
         {
@@ -152,8 +139,10 @@ namespace OpenCVTest
             }
         }
     }
+
     class CvProcessor
     {
+        private readonly SynchronizationContext context = SynchronizationContext.Current;
 
         private Capture capture;
         private bool inProgress;
@@ -166,33 +155,61 @@ namespace OpenCVTest
             set { parameters = value; }
         }
 
+        public delegate void LEDStatusChangedEventHandler(bool LEDStatus);
+        public event LEDStatusChangedEventHandler LEDStatusChanged;
+
         public delegate void CaptureStateChangedEventHandler(bool CaptureState);
         public event CaptureStateChangedEventHandler CaptureStateChanged;
 
-        public delegate void CaptureVerboseEventHandler(string message, bool title);
+        public delegate void CaptureVerboseEventHandler(string message);
         public event CaptureVerboseEventHandler Verbose;
 
         public delegate void ImageProcessedHandler(Image<Bgr, Byte> frame, Image<Gray, Byte> smooth, Image<Gray, Byte> threshold, Image<Gray, Byte> canny);
         public event ImageProcessedHandler ImageProcessed;
 
-        public void OnCaptureStateChanged(bool state)
+        private void OnCaptureStateChanged(bool state)
         {
             if (CaptureStateChanged != null)
-                CaptureStateChanged(state);
+            {
+                if (context != null)
+                    context.Post((o) => { CaptureStateChanged(state); }, null);
+                else
+                    CaptureStateChanged(state);
+            }
         }
 
-        public void OnVerbose(string message, bool title = false)
+        private void OnVerbose(string message)
         {
             if (Verbose != null)
-                Verbose(message, title);
+            {
+                if (context != null)
+                    context.Post((o) => { Verbose(message); }, null);
+                else
+                    Verbose(message);
+            }
         }
 
-        public void OnImageProcessed(Image<Bgr, Byte> frame, Image<Gray, Byte> smooth, Image<Gray, Byte> threshold, Image<Gray, Byte> canny)
+        private void OnLEDStatusChanged(bool status)
+        {
+            if (Verbose != null)
+            {
+                if (context != null)
+                    context.Post((o) => { LEDStatusChanged(status); }, null);
+                else
+                    LEDStatusChanged(status);
+            }
+        }
+
+        private void OnImageProcessed(Image<Bgr, Byte> frame, Image<Gray, Byte> smooth, Image<Gray, Byte> threshold, Image<Gray, Byte> canny)
         {
             if (ImageProcessed != null)
-                ImageProcessed(frame, smooth, threshold, canny);
+            {
+                //if (context != null)
+                //    context.Post((o) => { ImageProcessed(frame, smooth, threshold, canny); }, null);
+                //else
+                    ImageProcessed(frame, smooth, threshold, canny);
+            }
         }
-
 
         public void Start()
         {
@@ -251,7 +268,7 @@ namespace OpenCVTest
             Image<Gray, Byte> canny = threshold.Canny(new Gray(255), new Gray(255));
 
             Contour<Point> largestContour = null;
-            double largestarea = 0;
+            double largestArea = 0;
             currLEDStatus = false;
 
             for (Contour<System.Drawing.Point> contours = canny.FindContours(
@@ -261,9 +278,9 @@ namespace OpenCVTest
                 Point pt = new Point(contours.BoundingRectangle.X, contours.BoundingRectangle.Y);
                 //draw.Draw(new CircleF(pt, 5), new Gray(255), 0);
 
-                if (contours.Area > largestarea)
+                if (contours.Area > largestArea)
                 {
-                    largestarea = contours.Area;
+                    largestArea = contours.Area;
                     largestContour = contours;
                 }
 
@@ -286,12 +303,14 @@ namespace OpenCVTest
             if (currLEDStatus != prevLEDStatus)
             {
                 string message = String.Format("LED Status = {0}", currLEDStatus ? "ON" : "OFF");
-                OnVerbose(message, true);
+                OnVerbose(message);
+
+                OnLEDStatusChanged(currLEDStatus);
             }
 
             prevLEDStatus = currLEDStatus;
 
-            ImageProcessed(frame, smooth, threshold, canny);
+            OnImageProcessed(frame, smooth, threshold, canny);
 
             //form.DrawFrame(frame);
 
